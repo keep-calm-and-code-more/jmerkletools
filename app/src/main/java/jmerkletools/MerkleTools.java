@@ -3,6 +3,7 @@ package jmerkletools;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import javax.xml.bind.DatatypeConverter;
 
@@ -47,6 +48,7 @@ public class MerkleTools {
         return v_bytes;
     }
 
+    // public void addLeaf(List<byte[]> value)
     public void addLeaf(List<String> values, Boolean do_hash) throws Exception {
         this.is_ready = false;
         for (String v_raw : values) {
@@ -115,6 +117,30 @@ public class MerkleTools {
             return toHex(this.levels.get(0).get(0));
         } else {
             return null;
+        }
+    }
+
+    public ArrayList getProof(int index) {
+        if (this.levels == null || index < 0 || index > this.leaves.size() - 1 || this.is_ready == false) {
+            return null;
+        } else {
+            ArrayList<HashMap> proof = new ArrayList<HashMap>();
+            for (int x = this.levels.size() - 1; x > 0; x--) {
+                int level_len = this.levels.get(x).size();
+                if (index == level_len - 1 && level_len % 2 == 1) {
+                    index = index / 2;
+                    continue;
+                }
+                Boolean is_right_node = (index % 2) != 0 ;
+                int sibling_index = is_right_node ? index - 1 : index + 1;
+                String sibling_pos = is_right_node? "left" : "right";
+                String sibling_value = toHex(this.levels.get(x).get(sibling_index));
+                HashMap<String, String> map = new HashMap<>();
+                map.put(sibling_pos,sibling_value);
+                proof.add(map);
+                index = index/2;
+            }
+            return proof;
         }
     }
 
